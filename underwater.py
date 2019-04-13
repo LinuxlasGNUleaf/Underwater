@@ -39,6 +39,10 @@ class OutputManager(object):
         file = open(self.hs_path,"wb")
         pickle.dump(self.highscores,file)
         file.close()
+    
+    def sortHighscoresbyValue(self):
+        self.highscores = sorted(self.highscores.items(), key=operator.itemgetter(1), reverse=True)
+        return self.highscores
 
 #creating OutputManager
 output = OutputManager("high.score","config.txt")
@@ -356,6 +360,56 @@ class Obstacle(object):
         if show_boxes:
             pygame.draw.rect(win,(255,0,0),self.rect,1)
 
+#scoreboard manager
+class ScoreboardManager(object):
+    def __init__(self,OutputManager):
+        self.outMgr = OutputManager
+        self.scoreboard = tkinter.Tk()
+        self.scoreboard.title('Scoreboard')
+        self.canvas = tkinter.Canvas(self.scoreboard,width=300,height=500, bg='white')
+        self.canvas.pack()
+        self.name_input = tkinter.Text(self.scoreboard, width=10, height =1)
+        self.name_input.pack()
+        self.confirm_button = tkinter.Button(self.scoreboard, text="Enter", command=self.submitName)
+        self.confirm_button.pack()
+        self.scoreboard.mainloop()
+    
+    def submitName(self):
+        #getting input
+        name = "Anonym"
+        name2 = self.name_input.get("1.0",'end-1c')
+        if (name2 != ""):
+            name = name2 
+        splitted = name.split("\n")
+        name = splitted[len(splitted)-1]
+
+        #destroy input
+        self.confirm_button.destroy()
+        self.name_input.destroy()
+
+        self.outMgr.addHighscore(name,score)
+        hs_list = self.outMgr.sortHighscoresbyValue()
+
+        text = ""
+        i = 0
+        if (len(hs_list) < 10):
+            for i in range(len(hs_list)):
+                a,b = hs_list[i]
+                text += "{a}: {b}\n".format(a=a,b=b) 
+        else:
+            for key in hs_list and i in range(0,9,1):
+                i += 1
+                text += "{a}: {b}\n".format(a=key, b=hs_list[key]) 
+                
+        self.canvas.config(height = 0)
+        sb_text = tkinter.Text(self.scoreboard,width = 15, height = 10,font=("Helvetica", 22))
+        sb_text.delete(0.0)
+        sb_text.insert(0.0,text)
+        sb_text.config(state="disabled")
+        sb_text.pack()
+        self.scoreboard.update()
+
+
 class GameManager(object):
     def __init__(self,win,time_limit,max_score,bub_mgr,obst_mgr):
         self.win = win
@@ -440,8 +494,9 @@ class GameManager(object):
         self.obst_mgr.createSprite(self.score,self.MAX_SCORE)
     
     def ScoreboardSequence(self):
-        pass
-
+        self.scrMgr = ScoreboardManager(output)
+        # self.scrMgr.
+        
 #creating player
 sub = Player(WIDTH/2,HEIGHT/2,7,sub_img)
 
@@ -509,6 +564,6 @@ time = round((pygame.time.get_ticks()-gameMgr.ANIMATION_TIME)/1000,2)
 score = gameMgr.score + gameMgr.MAX_SCORE * gameMgr.ITERATIONS
 #output
 print("Your score was: {} and your time was: {}s\nThat's an average of {} points/second".format(score,time,round(score/time,2))) 
-
 #quit pygame 
 pygame.quit()
+gameMgr.ScoreboardSequence()
