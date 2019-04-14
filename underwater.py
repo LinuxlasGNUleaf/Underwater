@@ -7,6 +7,7 @@ import math
 import tkinter
 import operator
 import pickle
+import os
 
 #=========================IMPORTANT TEST RESULTS=================================
 # 38355 points / 1348.35s 
@@ -16,7 +17,12 @@ class OutputManager(object):
     def __init__(self,highscore,config):
         self.hs_path = highscore
         self.cfg_path = config
+        self.list = []
         self.highscores = {}
+        if not(os.path.isfile(highscore)):
+            open(highscore,'w+').close()
+        if not(os.path.isfile(config)):
+            open(config,'w+').close()
     
     def readHighscores(self):
         self.highscores = {}
@@ -41,8 +47,8 @@ class OutputManager(object):
         file.close()
     
     def sortHighscoresbyValue(self):
-        self.highscores = sorted(self.highscores.items(), key=operator.itemgetter(1), reverse=True)
-        return self.highscores
+        self.list = sorted(self.highscores.items(), key=operator.itemgetter(1), reverse=True)
+        return self.list
 
 #creating OutputManager
 output = OutputManager("high.score","config.txt")
@@ -386,7 +392,7 @@ class ScoreboardManager(object):
         #destroy input
         self.confirm_button.destroy()
         self.name_input.destroy()
-
+        self.outMgr.readHighscores()
         self.outMgr.addHighscore(name,score)
         hs_list = self.outMgr.sortHighscoresbyValue()
 
@@ -402,12 +408,13 @@ class ScoreboardManager(object):
                 text += "{a}: {b}\n".format(a=key, b=hs_list[key]) 
                 
         self.canvas.config(height = 0)
-        sb_text = tkinter.Text(self.scoreboard,width = 15, height = 10,font=("Helvetica", 22))
+        sb_text = tkinter.Text(self.scoreboard,width = 15, height = 10,font=("7_Segment.ttif", 22),bg="black")
         sb_text.delete(0.0)
         sb_text.insert(0.0,text)
         sb_text.config(state="disabled")
         sb_text.pack()
         self.scoreboard.update()
+        self.outMgr.saveHighscores()
 
 
 class GameManager(object):
