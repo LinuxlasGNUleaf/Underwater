@@ -78,6 +78,7 @@ pygame.init()
 
 #font load
 FONT = pygame.font.Font("7_Segment.ttf",28)
+tk_font = tkinter.In
 
 #window properties and init
 WIDTH = 1000
