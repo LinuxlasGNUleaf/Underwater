@@ -88,6 +88,8 @@ pygame.display.set_caption(("Underwater v1.4"))
 
 #setting up the timer
 clock = pygame.time.Clock()
+test = 5
+hest = 7
 
 #mapping input value in input range to an output value in an output range
 def map(value, inMin, inMax, outMin, outMax):
