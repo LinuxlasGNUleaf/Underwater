@@ -408,7 +408,7 @@ class ScoreboardManager(object):
                 text += "{a}: {b}\n".format(a=key, b=hs_list[key]) 
                 
         self.canvas.config(height = 0)
-        sb_text = tkinter.Text(self.scoreboard,width = 15, height = 10,font=("7_Segment.ttif", 22),bg="black")
+        sb_text = tkinter.Text(self.scoreboard,width = 15, height = 10,font=("7_Segment.ttif", 22),bg="black",fg="red")
         sb_text.delete(0.0)
         sb_text.insert(0.0,text)
         sb_text.config(state="disabled")
