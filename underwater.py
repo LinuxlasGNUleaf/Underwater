@@ -4,7 +4,7 @@
 import pygame
 import random
 import math
-import tkinter
+# import tkinter
 import operator
 import pickle
 import os
@@ -78,7 +78,6 @@ pygame.init()
 
 #font load
 FONT = pygame.font.Font("7_Segment.ttf",28)
-tk_font = tkinter.In
 
 #window properties and init
 WIDTH = 1000
@@ -369,53 +368,91 @@ class Obstacle(object):
 
 #scoreboard manager
 class ScoreboardManager(object):
-    def __init__(self,OutputManager):
+    def __init__(self,OutputManager,score):
         self.outMgr = OutputManager
-        self.scoreboard = tkinter.Tk()
-        self.scoreboard.title('Scoreboard')
-        self.canvas = tkinter.Canvas(self.scoreboard,width=300,height=500, bg='white')
-        self.canvas.pack()
-        self.name_input = tkinter.Text(self.scoreboard, width=10, height =1)
-        self.name_input.pack()
-        self.confirm_button = tkinter.Button(self.scoreboard, text="Enter", command=self.submitName)
-        self.confirm_button.pack()
-        self.scoreboard.mainloop()
+        self.width,self.height = (400,500)
+        self.win = pygame.display.set_mode((self.width,self.height))
+        self.in_width, self.in_height = (140,32)
+        self.win.fill((30, 30, 30))
+        pygame.display.update()
+        self.getName()
+        self.font = pygame.font.Font(None, 32)
+        self.sc_color = pygame.Color("brown2")
     
-    def submitName(self):
+    def getName(self):
         #getting input
-        name = "Anonym"
-        name2 = self.name_input.get("1.0",'end-1c')
-        if (name2 != ""):
-            name = name2 
-        splitted = name.split("\n")
-        name = splitted[len(splitted)-1]
+        clock =  pygame.time.Clock()
+        input_box =  pygame.Rect(self.width/2-self.in_width/1.5, self.height*4/5, self.in_width, self.in_height)
+        color_inactive =  pygame.Color('lightskyblue3')
+        color_active =  pygame.Color('dodgerblue2')
+        color = color_inactive
+        name = ''
+        done = False
 
-        #destroy input
-        self.confirm_button.destroy()
-        self.name_input.destroy()
-        self.outMgr.readHighscores()
-        self.outMgr.addHighscore(name,score)
+        while not done:
+            for event in  pygame.event.get():
+                if event.type ==  pygame.QUIT:
+                    name = ""
+                    done = True
+                
+                color = color_active if name else color_inactive
+
+                if event.type ==  pygame.KEYDOWN:
+                    if event.key ==  pygame.K_RETURN:
+                        print(name)
+                        done = True
+                    elif event.key ==  pygame.K_BACKSPACE:
+                        name = name[:-1]
+                    else:
+                        name += event.unicode
+
+            win.fill((30, 30, 30))
+            # Render the current text.
+            txt_surface = self.font.render(name, True, color)
+            # Resize the box if the text is too long.
+            width = max(200, txt_surface.get_width()+10)
+            input_box.w = width
+            # Blit the text.
+            win.blit(txt_surface, (input_box.x+5, input_box.y+5))
+            # Blit the input_box rect.
+            pygame.draw.rect(win, color, input_box, 2)
+
+            pygame.display.flip()
+            clock.tick(30)
+        
+        if name:
+            self.outMgr.readHighscores()
+            self.outMgr.addHighscore(name,score)
+            self.outMgr.saveHighscores()
+
+            self.displayText()
+    
+    def displayText(self):
         hs_list = self.outMgr.sortHighscoresbyValue()
 
-        text = ""
+        print(hs_list)
         i = 0
-        if (len(hs_list) < 10):
-            for i in range(len(hs_list)):
-                a,b = hs_list[i]
-                text += "{a}: {b}\n".format(a=a,b=b) 
-        else:
-            for key in hs_list and i in range(0,9,1):
-                i += 1
-                text += "{a}: {b}\n".format(a=key, b=hs_list[key]) 
-                
-        self.canvas.config(height = 0)
-        sb_text = tkinter.Text(self.scoreboard,width = 15, height = 10,font=("7_Segment.ttif", 22),bg="black",fg="red")
-        sb_text.delete(0.0)
-        sb_text.insert(0.0,text)
-        sb_text.config(state="disabled")
-        sb_text.pack()
-        self.scoreboard.update()
-        self.outMgr.saveHighscores()
+        for line in hs_list:
+            if i > 10:
+                return
+            i += 1
+            self.win.blit(self.font.render(line,True,self.sc_color),(10,i*30))
+
+        # print("\n\n")
+        # text = ""
+        # i = 0
+        # if (len(hs_list) < 10):
+        #     for i in range(len(hs_list)):
+        #         a,b = hs_list[i]
+        #         text += "{a}: {b}\n".format(a=a,b=b) 
+        # else:
+        #     for key in hs_list and i in range(0,9):
+        #         i += 1
+        #         text += "{a}: {b}\n".format(a=key, b=hs_list[key]) 
+        
+        # return text
+        
+
 
 
 class GameManager(object):
@@ -502,8 +539,7 @@ class GameManager(object):
         self.obst_mgr.createSprite(self.score,self.MAX_SCORE)
     
     def ScoreboardSequence(self):
-        self.scrMgr = ScoreboardManager(output)
-        # self.scrMgr.
+        self.scrMgr = ScoreboardManager(output,self.score)
         
 #creating player
 sub = Player(WIDTH/2,HEIGHT/2,7,sub_img)
@@ -573,5 +609,5 @@ score = gameMgr.score + gameMgr.MAX_SCORE * gameMgr.ITERATIONS
 #output
 print("Your score was: {} and your time was: {}s\nThat's an average of {} points/second".format(score,time,round(score/time,2))) 
 #quit pygame 
-pygame.quit()
 gameMgr.ScoreboardSequence()
+pygame.quit()
