@@ -8,51 +8,7 @@ import operator
 import pickle
 import os
 
-#=========================IMPORTANT TEST RESULTS=================================
-# 38355 points / 1348.35s 
-# average: 27.63 points per sec
-
-class OutputManager(object):
-    def __init__(self,highscore,config):
-        self.hs_path = highscore
-        self.cfg_path = config
-        self.list = []
-        self.highscores = {}
-        if not(os.path.isfile(highscore)):
-            open(highscore,'w+').close()
-        if not(os.path.isfile(config)):
-            open(config,'w+').close()
-    
-    def readHighscores(self):
-        self.highscores = {}
-        # read from file
-        file = open(self.hs_path,"rb")
-
-        try:
-            self.highscores = pickle.load(file)
-        except EOFError:
-            print('Highscore file empty or corrupted!')
-
-        file.close()
-        return self.highscores
-    
-    def addHighscore(self,name, score):
-        try:
-            if (self.highscores[name]<score):
-                self.highscores[name] = score
-        except:
-            self.highscores[name] = score
-    def saveHighscores(self):
-        #writing new list to file
-        file = open(self.hs_path,"wb")
-        pickle.dump(self.highscores,file)
-        file.close()
-    
-    def sortHighscoresbyValue(self):
-        self.list = sorted(self.highscores.items(), key=operator.itemgetter(1), reverse=True)
-        return self.list
-
-#image loads
+#=================================================>> IMAGE LOADING <<========================================================
 bg = pygame.image.load("underwater.jpeg")
 sub_img = pygame.image.load("Submarine-icon2.png")
 bub_list = [pygame.image.load("bubble1.png"),pygame.image.load("bubble2.png"),pygame.image.load("bubble3.png")]
@@ -62,21 +18,19 @@ monitor = pygame.image.load("monitor.png")
 obstacles_list = [pygame.image.load("obstacle2.png"),pygame.image.load("obstacle3.png")]
 liquid = pygame.image.load("liquid.png")
 
-#sub_biases = (20,30,160,137)
+
 bub_scores = [5,20,125]
 obst_scores = [-500,-250]
-
-
-#initialization
-#ITERATIONS = 0      #initialized to 0, counts how often score was resetted (for recreating the real score after the game)
-#ANIMATION_TIME = 0  #initialized to 0, counts how long the animations were (for recreating the real time after the game)
-#TRUE_SCORE = 0      #initialized to 0, saves the score at the beginning of endgame to prevent any further increase of the score
 
 #pygame init
 pygame.init()
 
+#color init
+color = pygame.Color("brown2")
+
 #font load
-FONT = pygame.font.Font("7_Segment.ttf",28)
+FONT = pygame.font.Font(os.path.join("fonts","7_Segment.ttf"),28)
+SC_FONT = pygame.font.Font(os.path.join("fonts","Perfect_DOS_VGA_437.ttf"),30)
 
 #window properties and init
 WIDTH = 1000
@@ -88,6 +42,7 @@ pygame.display.set_caption(("Underwater v1.4"))
 #setting up the timer
 clock = pygame.time.Clock()
 
+#==================================================>> CLASS DEFINITION <<==========================================================
 #mapping input value in input range to an output value in an output range
 def map(value, inMin, inMax, outMin, outMax):
     if value < inMin:
@@ -365,6 +320,7 @@ class Obstacle(object):
         if show_boxes:
             pygame.draw.rect(win,(255,0,0),self.rect,1)
 
+#GameManager, handles complete game management
 class GameManager(object):
     def __init__(self,win,time_limit,max_score,bub_mgr,obst_mgr):
         self.win = win
@@ -448,6 +404,47 @@ class GameManager(object):
         self.bub_mgr.createSprite(self.score,self.MAX_SCORE)
         self.obst_mgr.createSprite(self.score,self.MAX_SCORE)
 
+#OutputManager
+class OutputManager(object):
+    def __init__(self,highscore,config):
+        self.hs_path = highscore
+        self.cfg_path = config
+        self.list = []
+        self.highscores = {}
+        if not(os.path.isfile(highscore)):
+            open(highscore,'w+').close()
+        if not(os.path.isfile(config)):
+            open(config,'w+').close()
+    
+    def readHighscores(self):
+        self.highscores = {}
+        # read from file
+        file = open(self.hs_path,"rb")
+
+        try:
+            self.highscores = pickle.load(file)
+        except EOFError:
+            print('Highscore file empty or corrupted!')
+
+        file.close()
+        return self.highscores
+    
+    def addHighscore(self,name, score):
+        try:
+            if (self.highscores[name]<score):
+                self.highscores[name] = score
+        except:
+            self.highscores[name] = score
+    def saveHighscores(self):
+        #writing new list to file
+        file = open(self.hs_path,"wb")
+        pickle.dump(self.highscores,file)
+        file.close()
+    
+    def sortHighscoresbyValue(self):
+        self.list = sorted(self.highscores.items(), key=operator.itemgetter(1), reverse=True)
+        return self.list
+
 #===================================================>> INITIALIZATION <<===========================================================
 #creating player
 sub = Player(WIDTH/2,HEIGHT/2,7,sub_img)
@@ -472,7 +469,9 @@ gui = GUIManager(win,gameMgr,(0,HEIGHT,WIDTH,HEIGHT+GUI_HEIGHT),(100,100,60),(10
 
 #Output Manager
 outMgr = OutputManager("high.score","config.txt")
-#================================================================================================================================
+
+
+#=====================================================>> MAIN LOOP <<==============================================================
 
 run = True
 #mainloop
@@ -514,18 +513,14 @@ while run:
     gameMgr.redrawGameWindow(False)
 
 score = gameMgr.score + gameMgr.MAX_SCORE * gameMgr.ITERATIONS
-width,height = (400,500)
-win = pygame.display.set_mode((width,height))
+WIDTH,HEIGHT = (400,500)
+win = pygame.display.set_mode((WIDTH,HEIGHT))
 pygame.display.set_caption("Scoreboard")
 in_width, in_height = (140,32)
-win.fill((30, 30, 30))
-font = pygame.font.Font(os.path.join("fonts","Perfect_DOS_VGA_437.ttf"),30)
-sc_color = pygame.Color("brown2")
+# win.fill((30, 30, 30))
 
 #getting input
-input_box = pygame.Rect(width/2-in_width/2, height*4/5, in_width, in_height)
-color_inactive = pygame.Color('lightskyblue3')
-color_active = pygame.Color('dodgerblue2')
+input_box = pygame.Rect(WIDTH/2-in_width/2, WIDTH*4/5, in_width, in_height)
 name = ''
 
 run = True
@@ -534,8 +529,6 @@ while run:
         if event.type == pygame.QUIT:
             name = ""
             run = False
-        
-        color = color_active if name else color_inactive
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_RETURN:
@@ -547,9 +540,9 @@ while run:
                 name += event.unicode
 
     win.fill((30, 30, 30))
-    txt_surface = font.render(name, True, sc_color)
+    txt_surface = SC_FONT.render(name, True, color)
     win.blit(txt_surface, (input_box.x+5, input_box.y+5))
-    pygame.draw.rect(win, sc_color, input_box, 2)
+    pygame.draw.rect(win, color, input_box, 2)
 
     pygame.display.flip()
     clock.tick(30)
@@ -559,7 +552,7 @@ if name:
     outMgr.addHighscore(name,score)
     outMgr.saveHighscores()
     hs_list = outMgr.sortHighscoresbyValue()
-    win.blit(font.render("HIGHSCORES",True,sc_color),(width/2-80,10))
+    win.blit(SC_FONT.render("HIGHSCORES",True,color),(WIDTH/2-80,10))
     i,j = 0,0
     for line in hs_list:
         if i > 10:
@@ -567,7 +560,7 @@ if name:
         i += 1
         j = 0
         for column in line:
-            win.blit(font.render(str(column),True,sc_color),(10 + j * (width-200),i*30+20))
+            win.blit(SC_FONT.render(str(column),True,color),(10 + j * (WIDTH-200),i*30+20))
             j += 1
 
 run = True
