@@ -38,9 +38,11 @@ class OutputManager(object):
         return self.highscores  
     
     def addHighscore(self,name, score):
-        if (self.highscores[name]<score):
+        try:
+            if (self.highscores[name]<score):
+                self.highscores[name] = score
+        except:
             self.highscores[name] = score
-    
     def saveHighscores(self):
         #writing new list to file
         file = open(self.hs_path,"wb")
@@ -373,6 +375,7 @@ class ScoreboardManager(object):
         self.outMgr = OutputManager
         self.width,self.height = (400,500)
         self.win = pygame.display.set_mode((self.width,self.height))
+        pygame.display.set_caption("Scoreboard")
         self.in_width, self.in_height = (140,32)
         self.win.fill((30, 30, 30))
         self.font = pygame.font.Font(os.path.join("fonts","Perfect_DOS_VGA_437.ttf"),30)
@@ -445,10 +448,6 @@ class ScoreboardManager(object):
             for column in line:
                 self.win.blit(self.font.render(str(column),True,self.sc_color),(10 + j * (self.width-200),i*30+20))
                 j += 1
-
-        
-
-
 
 class GameManager(object):
     def __init__(self,win,time_limit,max_score,bub_mgr,obst_mgr):
