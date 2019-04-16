@@ -34,7 +34,7 @@ class OutputManager(object):
             print('Highscore file empty or corrupted!')
 
         file.close()
-        return self.highscores  
+        return self.highscores
     
     def addHighscore(self,name, score):
         try:
@@ -51,9 +51,6 @@ class OutputManager(object):
     def sortHighscoresbyValue(self):
         self.list = sorted(self.highscores.items(), key=operator.itemgetter(1), reverse=True)
         return self.list
-
-#creating OutputManager
-output = OutputManager("high.score","config.txt")
 
 #image loads
 bg = pygame.image.load("underwater.jpeg")
@@ -369,84 +366,81 @@ class Obstacle(object):
             pygame.draw.rect(win,(255,0,0),self.rect,1)
 
 #scoreboard manager
-class ScoreboardManager(object):
-    def __init__(self,OutputManager,score):
-        self.outMgr = OutputManager
-        self.width,self.height = (400,500)
-        self.win = pygame.display.set_mode((self.width,self.height))
-        pygame.display.set_caption("Scoreboard")
-        self.in_width, self.in_height = (140,32)
-        self.win.fill((30, 30, 30))
-        self.font = pygame.font.Font(os.path.join("fonts","Perfect_DOS_VGA_437.ttf"),30)
-        self.sc_color = pygame.Color("brown2")
-        self.getName()
-        pygame.display.update()
-        while True:
-            for event in  pygame.event.get():
-                if event.type ==  pygame.QUIT:
-                    return
-    def getName(self):
-        #getting input
-        clock =  pygame.time.Clock()
-        input_box =  pygame.Rect(self.width/2-self.in_width/1.5, self.height*4/5, self.in_width, self.in_height)
-        color_inactive =  pygame.Color('lightskyblue3')
-        color_active =  pygame.Color('dodgerblue2')
-        color = color_inactive
-        name = ''
-        done = False
+# class ScoreboardManager(object):
+#     def __init__(self,OutputManager,score):
+#         self.outMgr = OutputManager
+#         self.width,self.height = (400,500)
+#         self.win = pygame.display.set_mode((400,500))
+#         pygame.display.set_caption("Scoreboard")
+#         self.in_width, self.in_height = (140,32)
+#         self.win.fill((30, 30, 30))
+#         self.font = pygame.font.Font(os.path.join("fonts","Perfect_DOS_VGA_437.ttf"),30)
+#         self.sc_color = pygame.Color("brown2")
+#         self.getName()
+#         pygame.display.update()
 
-        while not done:
-            for event in  pygame.event.get():
-                if event.type ==  pygame.QUIT:
-                    name = ""
-                    done = True
+#     def getName(self):
+#         #getting input
+#         clock = pygame.time.Clock()
+#         input_box = pygame.Rect(self.width/2-self.in_width/1.5, self.height*4/5, self.in_width, self.in_height)
+#         color_inactive = pygame.Color('lightskyblue3')
+#         color_active = pygame.Color('dodgerblue2')
+#         color = color_inactive
+#         name = ''
+#         done = False
+
+#         while not done:
+#             for event in pygame.event.get():
+#                 if event.type == pygame.QUIT:
+#                     name = ""
+#                     done = True
                 
-                color = color_active if name else color_inactive
+#                 color = color_active if name else color_inactive
 
-                if event.type ==  pygame.KEYDOWN:
-                    if event.key ==  pygame.K_RETURN:
-                        # print(name)
-                        done = True
-                    elif event.key ==  pygame.K_BACKSPACE:
-                        name = name[:-1]
+#                 if event.type == pygame.KEYDOWN:
+#                     if event.key == pygame.K_RETURN:
+#                         # print(name)
+#                         done = True
+#                     elif event.key == pygame.K_BACKSPACE:
+#                         name = name[:-1]
                     
-                    elif (len(name)< 11):
-                            name += event.unicode
+#                     elif (len(name)< 11):
+#                             name += event.unicode
 
-            win.fill((30, 30, 30))
-            # Render the current text.
-            txt_surface = self.font.render(name, True, color)
-            # Resize the box if the text is too long.
-            width = max(200, txt_surface.get_width()+10)
-            input_box.w = width
-            # Blit the text.
-            win.blit(txt_surface, (input_box.x+5, input_box.y+5))
-            # Blit the input_box rect.
-            pygame.draw.rect(win, color, input_box, 2)
+#             win.fill((30, 30, 30))
+#             # Render the current text.
+#             txt_surface = self.font.render(name, True, color)
+#             # Resize the box if the text is too long.
+#             width = max(200, txt_surface.get_width()+10)
+#             input_box.w = width
+#             # Blit the text.
+#             win.blit(txt_surface, (input_box.x+5, input_box.y+5))
+#             # Blit the input_box rect.
+#             pygame.draw.rect(win, color, input_box, 2)
 
-            pygame.display.flip()
-            clock.tick(30)
+#             pygame.display.flip()
+#             clock.tick(30)
         
-        if name:
-            self.outMgr.readHighscores()
-            self.outMgr.addHighscore(name,score)
-            self.displayText()
-            self.outMgr.saveHighscores()
-    
-    def displayText(self):
-        hs_list = self.outMgr.sortHighscoresbyValue()
-        self.win.blit(self.font.render("HIGHSCORES",True,self.sc_color),(self.width/2-80,10))
-        print(hs_list)
-        i = 0
-        j = 0
-        for line in hs_list:
-            if i > 10:
-                return
-            i += 1
-            j = 0
-            for column in line:
-                self.win.blit(self.font.render(str(column),True,self.sc_color),(10 + j * (self.width-200),i*30+20))
-                j += 1
+#         if name:
+#             self.outMgr.readHighscores()
+#             self.outMgr.addHighscore(name,score)
+#             self.displayText()
+#             self.outMgr.saveHighscores()
+
+#     def displayText(self):
+#         hs_list = self.outMgr.sortHighscoresbyValue()
+#         self.win.blit(self.font.render("HIGHSCORES",True,self.sc_color),(self.width/2-80,10))
+#         print(hs_list)
+#         i = 0
+#         j = 0
+#         for line in hs_list:
+#             if i > 10:
+#                 return
+#             i += 1
+#             j = 0
+#             for column in line:
+#                 self.win.blit(self.font.render(str(column),True,self.sc_color),(10 + j * (self.width-200),i*30+20))
+#                 j += 1
 
 class GameManager(object):
     def __init__(self,win,time_limit,max_score,bub_mgr,obst_mgr):
@@ -530,10 +524,8 @@ class GameManager(object):
     def createSprites(self):
         self.bub_mgr.createSprite(self.score,self.MAX_SCORE)
         self.obst_mgr.createSprite(self.score,self.MAX_SCORE)
-    
-    def ScoreboardSequence(self):
-        self.scrMgr = ScoreboardManager(output,self.score)
-        
+
+#===================================================>> INITIALIZATION <<===========================================================
 #creating player
 sub = Player(WIDTH/2,HEIGHT/2,7,sub_img)
 
@@ -554,14 +546,16 @@ gameMgr = GameManager(win,30,10000,b_mgr,o_mgr)
 
 #creating instances of the GUI-manager
 gui = GUIManager(win,gameMgr,(0,HEIGHT,WIDTH,HEIGHT+GUI_HEIGHT),(100,100,60),(10,0.5))
-        
-#loop variable
-run = True
 
+#Output Manager
+outMgr = OutputManager("high.score","config.txt")
+#================================================================================================================================
+
+run = True
 #mainloop
 while run:
     #fps 
-    clock.tick(60)
+    clock.tick(45)
     
     #check for closing window
     for event in pygame.event.get():
@@ -595,12 +589,63 @@ while run:
     
     #redraw Window ATTENTION: THIS SHOULD BE THE LAST ACTION IN THE MAIN LOOP! 
     gameMgr.redrawGameWindow(False)
-    
-#calculating played time 
-time = round((pygame.time.get_ticks()-gameMgr.ANIMATION_TIME)/1000,2)
+
+
+
 score = gameMgr.score + gameMgr.MAX_SCORE * gameMgr.ITERATIONS
-#output
-print("Your score was: {} and your time was: {}s\nThat's an average of {} points/second".format(score,time,round(score/time,2))) 
-#quit pygame 
-gameMgr.ScoreboardSequence()
+width,height = (400,500)
+win = pygame.display.set_mode((width,height))
+pygame.display.set_caption("Scoreboard")
+in_width, in_height = (140,32)
+win.fill((30, 30, 30))
+font = pygame.font.Font(os.path.join("fonts","Perfect_DOS_VGA_437.ttf"),30)
+sc_color = pygame.Color("brown2")
+
+#getting input
+input_box = pygame.Rect(width/2-in_width/1.5, height*4/5, in_width, in_height)
+color_inactive = pygame.Color('lightskyblue3')
+color_active = pygame.Color('dodgerblue2')
+name = ''
+
+while True:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            name = ""
+            continue
+        
+        color = color_active if name else color_inactive
+
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_RETURN:
+                continue
+            elif event.key == pygame.K_BACKSPACE:
+                name = name[:-1]
+            
+            elif (len(name)< 11):
+                    name += event.unicode
+
+    win.fill((30, 30, 30))
+    txt_surface = font.render(name, True, sc_color)
+    win.blit(txt_surface, (input_box.x+5, input_box.y+5))
+    pygame.draw.rect(win, sc_color, input_box, 2)
+
+    pygame.display.flip()
+    clock.tick(30)
+
+if name:
+    outMgr.readHighscores()
+    outMgr.addHighscore(name,score)
+    outMgr.saveHighscores()
+    hs_list = outMgr.sortHighscoresbyValue()
+    win.blit(font.render("HIGHSCORES",True,sc_color),(width/2-80,10))
+    i,j = 0,0
+    for line in hs_list:
+        if i > 10:
+            continue
+        i += 1
+        j = 0
+        for column in line:
+            win.blit(font.render(str(column),True,sc_color),(10 + j * (width-200),i*30+20))
+            j += 1
+
 pygame.quit()
