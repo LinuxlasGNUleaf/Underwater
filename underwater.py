@@ -38,7 +38,8 @@ class OutputManager(object):
         return self.highscores  
     
     def addHighscore(self,name, score):
-        self.highscores[name] = score
+        if (self.highscores[name]<score):
+            self.highscores[name] = score
     
     def saveHighscores(self):
         #writing new list to file
@@ -374,11 +375,14 @@ class ScoreboardManager(object):
         self.win = pygame.display.set_mode((self.width,self.height))
         self.in_width, self.in_height = (140,32)
         self.win.fill((30, 30, 30))
-        pygame.display.update()
-        self.getName()
-        self.font = pygame.font.Font(None, 32)
+        self.font = pygame.font.Font(os.path.join("fonts","Perfect_DOS_VGA_437.ttf"),30)
         self.sc_color = pygame.Color("brown2")
-    
+        self.getName()
+        pygame.display.update()
+        while True:
+            for event in  pygame.event.get():
+                if event.type ==  pygame.QUIT:
+                    return
     def getName(self):
         #getting input
         clock =  pygame.time.Clock()
@@ -399,12 +403,13 @@ class ScoreboardManager(object):
 
                 if event.type ==  pygame.KEYDOWN:
                     if event.key ==  pygame.K_RETURN:
-                        print(name)
+                        # print(name)
                         done = True
                     elif event.key ==  pygame.K_BACKSPACE:
                         name = name[:-1]
-                    else:
-                        name += event.unicode
+                    
+                    elif (len(name)< 11):
+                            name += event.unicode
 
             win.fill((30, 30, 30))
             # Render the current text.
@@ -423,34 +428,24 @@ class ScoreboardManager(object):
         if name:
             self.outMgr.readHighscores()
             self.outMgr.addHighscore(name,score)
-            self.outMgr.saveHighscores()
-
             self.displayText()
+            self.outMgr.saveHighscores()
     
     def displayText(self):
         hs_list = self.outMgr.sortHighscoresbyValue()
-
+        self.win.blit(self.font.render("HIGHSCORES",True,self.sc_color),(self.width/2-80,10))
         print(hs_list)
         i = 0
+        j = 0
         for line in hs_list:
             if i > 10:
                 return
             i += 1
-            self.win.blit(self.font.render(line,True,self.sc_color),(10,i*30))
+            j = 0
+            for column in line:
+                self.win.blit(self.font.render(str(column),True,self.sc_color),(10 + j * (self.width-200),i*30+20))
+                j += 1
 
-        # print("\n\n")
-        # text = ""
-        # i = 0
-        # if (len(hs_list) < 10):
-        #     for i in range(len(hs_list)):
-        #         a,b = hs_list[i]
-        #         text += "{a}: {b}\n".format(a=a,b=b) 
-        # else:
-        #     for key in hs_list and i in range(0,9):
-        #         i += 1
-        #         text += "{a}: {b}\n".format(a=key, b=hs_list[key]) 
-        
-        # return text
         
 
 
