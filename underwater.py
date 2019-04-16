@@ -322,7 +322,7 @@ class Obstacle(object):
 
 #GameManager, handles complete game management
 class GameManager(object):
-    def __init__(self,win,time_limit,max_score,bub_mgr,obst_mgr):
+    def __init__(self,win,time_limit,max_score,bub_mgr,obst_mgr,OutputManager):
         self.win = win
         # self.ANIMATION_TIME = 0
         self.TIME_LIMIT = time_limit
@@ -333,6 +333,7 @@ class GameManager(object):
         self.score = 0
         self.bub_mgr = bub_mgr
         self.obst_mgr = obst_mgr
+        self.outMgr = OutputManager
 
     def redrawGameWindow(self,isReset):
         #background
@@ -444,6 +445,9 @@ class OutputManager(object):
         return self.list
 
 #===================================================>> INITIALIZATION <<===========================================================
+#Output Manager
+outMgr = OutputManager("high.score","config.txt")
+
 #creating player
 sub = Player(WIDTH/2,HEIGHT/2,7,sub_img)
 
@@ -460,15 +464,10 @@ b_mgr = SpriteManager(Bubble,bubble_chance,WIDTH-10,(0,HEIGHT-30),bubble_vel,bub
 o_mgr = SpriteManager(Obstacle,obstacle_chance,WIDTH-10,(0,HEIGHT-30),obstacle_vel,obstacles_list,0,sub,obst_scores)
 
 #creating GameManager
-gameMgr = GameManager(win,30,10000,b_mgr,o_mgr) 
+gameMgr = GameManager(win,30,10000,b_mgr,o_mgr,outMgr) 
 
 #creating instances of the GUI-manager
 gui = GUIManager(win,gameMgr,(0,HEIGHT,WIDTH,HEIGHT+GUI_HEIGHT),(110,100,60),(10,0.5))
-
-#Output Manager
-outMgr = OutputManager("high.score","config.txt")
-
-
 #=====================================================>> MAIN LOOP <<==============================================================
 
 run = True
