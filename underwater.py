@@ -19,7 +19,7 @@ obstacles_list = [pygame.image.load("obstacle1.png"),pygame.image.load("obstacle
 liquid = pygame.image.load("liquid.png")
 
 
-bub_scores = [5,20,125]
+bub_scores = [5,20,1000] #changed for testing purposes, old = 125
 obst_scores = [-500,-250]
 
 #pygame init
@@ -354,7 +354,6 @@ class GameManager(object):
     #animation for resetting score when levelling up
     def animation(self):
         score_overflow = self.score % self.MAX_SCORE
-        time_old = pygame.time.get_ticks()
 
         b = 100
         while b > 0:
@@ -365,26 +364,23 @@ class GameManager(object):
             
         self.score = score_overflow
         gui.resetAverage()
-        time = pygame.time.get_ticks()
-        time_passed = time-time_old
         self.ITERATIONS += 1
         self.TIME_ADD = map(self.ITERATIONS,1,10,self.ADD_ORIGIN,15)
-        # self.ANIMATION_TIME += time_passed
-        self.TIME_LIMIT += self.TIME_ADD + time_passed/1000
-        debug = """ DEBUG: next level.
+        self.TIME_LIMIT = self.TIME_ADD + pygame.time.get_ticks()/1000
+        # debug = """ DEBUG: next level.
         
-        Iterations: {} 
-        total score: {}pts 
-        score overflow {}pts
+        # Iterations: {} 
+        # total score: {}pts 
+        # score overflow {}pts
 
-        TIME
-        before:              {}ms 
-        after:               {}ms 
-        passed in animation: {}ms 
-        new time limit:      {}ms
-        time till deadline:  {}s
-        """
-        print(debug.format(self.ITERATIONS,self.ITERATIONS*self.MAX_SCORE,score_overflow,time_old,time,time_passed,self.TIME_LIMIT,self.TIME_LIMIT-time/1000))
+        # TIME
+        # before:              {}ms 
+        # after:               {}ms 
+        # passed in animation: {}ms 
+        # new time limit:      {}ms
+        # time till deadline:  {}s
+        # """
+        # print(debug.format(self.ITERATIONS,self.ITERATIONS*self.MAX_SCORE,score_overflow,time_old,time,time_passed,self.TIME_LIMIT,self.TIME_LIMIT-time/1000))
     
     #triggered when time > TIME_LIMIT
     def endGame(self):
@@ -514,6 +510,7 @@ while run:
     #redraw Window ATTENTION: THIS SHOULD BE THE LAST ACTION IN THE MAIN LOOP! 
     gameMgr.redrawGameWindow(False)
 
+#======================================================>> END GAME <<==============================================================
 score = gameMgr.score + gameMgr.MAX_SCORE * gameMgr.ITERATIONS
 WIDTH,HEIGHT = (400,500)
 win = pygame.display.set_mode((WIDTH,HEIGHT))
@@ -554,15 +551,16 @@ if name:
     outMgr.saveHighscores()
     hs_list = outMgr.sortHighscoresbyValue()
     win.blit(SC_FONT.render("HIGHSCORES",True,color),(WIDTH/2-80,10))
-    i,j = 0,0
+    i = 0
     for line in hs_list:
         if i > 10:
             continue
         i += 1
-        j = 0
-        for column in line:
-            win.blit(SC_FONT.render(str(column),True,color),(10 + j * (WIDTH-150),i*30+40))
-            j += 1
+        name,score = line
+        win.blit(SC_FONT.render(name,True,color),(10,i*30+40))
+        len_score = len(str(score))
+        score_width = len_score*16
+        win.blit(SC_FONT.render(str(score),True,color),(WIDTH-score_width-10,i*30+40))
 
 
 pygame.display.update()
