@@ -517,10 +517,9 @@ WIDTH,HEIGHT = (400,500)
 win = pygame.display.set_mode((WIDTH,HEIGHT))
 pygame.display.set_caption("Scoreboard")
 in_width, in_height = (140,32)
-# win.fill((30, 30, 30))
 
 #getting input
-input_box = pygame.Rect(WIDTH/2-in_width/2, WIDTH*4/5, in_width, in_height)
+input_box = pygame.Rect(WIDTH/2-in_width/2, HEIGHT*4/5, in_width, in_height)
 name = ''
 
 run = True
@@ -535,7 +534,6 @@ while run:
                 run = False
             elif event.key == pygame.K_BACKSPACE:
                 name = name[:-1]
-            
             elif (len(name)< 11):
                 name += event.unicode
 
@@ -560,11 +558,12 @@ if name:
         i += 1
         j = 0
         for column in line:
-            win.blit(SC_FONT.render(str(column),True,color),(10 + j * (WIDTH-200),i*30+20))
+            win.blit(SC_FONT.render(str(column),True,color),(10 + j * (WIDTH-150),i*30+40))
             j += 1
 
-run = True
+
 pygame.display.update()
+run = True
 while run:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
