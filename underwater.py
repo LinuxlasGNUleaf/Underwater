@@ -12,9 +12,9 @@ import os
 bg = pygame.image.load("underwater.jpeg")
 sub_img = pygame.image.load("Submarine-icon2.png")
 bub_list = [pygame.image.load("bubble1.png"),pygame.image.load("bubble2.png"),pygame.image.load("bubble3.png")]
-gauge = pygame.image.load("gauge.png")
-steel = [pygame.image.load("steel.jpg"),pygame.image.load("steel2.png")]
-monitor = pygame.image.load("monitor.png")
+#gauge = pygame.image.load("gauge.png")
+steel = [pygame.image.load("steel.jpg"),pygame.image.load("steel3.png")]
+#monitor = pygame.image.load("monitor.png")
 obstacles_list = [pygame.image.load("obstacle2.png"),pygame.image.load("obstacle3.png")]
 liquid = pygame.image.load("liquid.png")
 
@@ -264,14 +264,14 @@ class GUIManager(object):
         else:
             average = self.average_old
 
-        win.blit(gauge,(self.velx-149,self.vely-100))
+        #win.blit(gauge,(self.velx-149,self.vely-100))
         radian = math.radians(map(average,0,150,-45,225))
         y = math.sin(radian) * self.rad
         x = math.cos(radian) * self.rad
         pygame.draw.line(win,(50,50,50),(self.velx,self.vely),(self.velx-x,self.vely-y),4)
     
     def draw_monitor(self,score,time,TIME_LIMIT,isReset):
-        win.blit(monitor,(self.x1+700,self.y1))
+        #win.blit(monitor,(self.x1+700,self.y1))
 
         if isReset:
             win.blit(self.reset_texts[0],(self.x1+720,self.y1+60))
@@ -324,8 +324,9 @@ class Obstacle(object):
 class GameManager(object):
     def __init__(self,win,time_limit,max_score,bub_mgr,obst_mgr):
         self.win = win
-        self.ANIMATION_TIME = 0
+        # self.ANIMATION_TIME = 0
         self.TIME_LIMIT = time_limit
+        self.ADD_ORIGIN = time_limit
         self.TIME_ADD = time_limit
         self.MAX_SCORE = max_score
         self.ITERATIONS = 0
@@ -366,9 +367,10 @@ class GameManager(object):
         gui.resetAverage()
         time = pygame.time.get_ticks()
         time_passed = time-time_old
-        self.ANIMATION_TIME += time_passed
-        self.TIME_LIMIT += self.TIME_ADD + time_passed/1000
         self.ITERATIONS += 1
+        self.TIME_ADD = map(self.ITERATIONS,1,10,self.ADD_ORIGIN,15)
+        # self.ANIMATION_TIME += time_passed
+        self.TIME_LIMIT += self.TIME_ADD + time_passed/1000
         debug = """ DEBUG: next level.
         
         Iterations: {} 
@@ -465,7 +467,7 @@ o_mgr = SpriteManager(Obstacle,obstacle_chance,WIDTH-10,(0,HEIGHT-30),obstacle_v
 gameMgr = GameManager(win,30,10000,b_mgr,o_mgr) 
 
 #creating instances of the GUI-manager
-gui = GUIManager(win,gameMgr,(0,HEIGHT,WIDTH,HEIGHT+GUI_HEIGHT),(100,100,60),(10,0.5))
+gui = GUIManager(win,gameMgr,(0,HEIGHT,WIDTH,HEIGHT+GUI_HEIGHT),(110,100,60),(10,0.5))
 
 #Output Manager
 outMgr = OutputManager("high.score","config.txt")
@@ -521,13 +523,14 @@ in_width, in_height = (140,32)
 #getting input
 input_box = pygame.Rect(WIDTH/2-in_width/2, HEIGHT*4/5, in_width, in_height)
 name = ''
-
+abort = False
 run = True
 while run:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             name = ""
             run = False
+            abort = True
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_RETURN:
@@ -563,7 +566,7 @@ if name:
 
 
 pygame.display.update()
-run = True
+run = False if abort else True
 while run:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
