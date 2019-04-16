@@ -15,7 +15,7 @@ bub_list = [pygame.image.load("bubble1.png"),pygame.image.load("bubble2.png"),py
 #gauge = pygame.image.load("gauge.png")
 steel = [pygame.image.load("steel.jpg"),pygame.image.load("steel3.png")]
 #monitor = pygame.image.load("monitor.png")
-obstacles_list = [pygame.image.load("obstacle2.png"),pygame.image.load("obstacle3.png")]
+obstacles_list = [pygame.image.load("obstacle1.png"),pygame.image.load("obstacle2.png")]
 liquid = pygame.image.load("liquid.png")
 
 
