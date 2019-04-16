@@ -4,7 +4,6 @@
 import pygame
 import random
 import math
-# import tkinter
 import operator
 import pickle
 import os
