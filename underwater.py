@@ -278,10 +278,8 @@ class GUIManager(object):
         win.blit(SC_FONT.render("Scoreboard",True,(0,200,0)),(self.x1+420,self.y1+20))
         self.outMgr.forceaddHighscore("You",score)
         self.sc_list = self.outMgr.sortHighscoresbyValue()
-        print(self.sc_list)
         if len(self.sc_list) > 1:
             position = self.sc_list.index(("You",self.outMgr.highscores["You"]))
-            #print("Your position is {} in the list with the full length of {}".format(position,len(self.sc_list)))
             
             if len(self.sc_list)-1 == position:
                 spec_position = 2
@@ -291,15 +289,12 @@ class GUIManager(object):
                 spec_position = 1
 
             if spec_position == 1: #if you are not the last and not the first (STANDARD)
-                #print("Your are somewhere in the middle!")
                 self.createScoreboardStrings(position-1,position,position+1)
             
             elif spec_position == 0: #if you are the first
-                #print("Your at the first position!")
                 self.createScoreboardStrings(None,position,position+1)
             
             elif spec_position == 2: #if you are the last
-                #print("Your at the last position!")
                 self.createScoreboardStrings(position-1,position,None)
 
         else:
