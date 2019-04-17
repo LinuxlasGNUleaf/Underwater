@@ -12,14 +12,11 @@ import os
 bg = pygame.image.load("underwater.jpeg")
 sub_img = pygame.image.load("Submarine-icon2.png")
 bub_list = [pygame.image.load("bubble1.png"),pygame.image.load("bubble2.png"),pygame.image.load("bubble3.png")]
-#gauge = pygame.image.load("gauge.png")
 steel = [pygame.image.load("steel.jpg"),pygame.image.load("steel3.png")]
-#monitor = pygame.image.load("monitor.png")
 obstacles_list = [pygame.image.load("obstacle1.png"),pygame.image.load("obstacle2.png")]
 liquid = pygame.image.load("liquid.png")
 
-
-bub_scores = [5,20,125] #changed for testing purposes, old = 125
+bub_scores = [5,20,125] 
 obst_scores = [-500,-250]
 
 #pygame init
@@ -42,7 +39,8 @@ pygame.display.set_caption(("Underwater v1.4"))
 #setting up the timer
 clock = pygame.time.Clock()
 
-#==================================================>> CLASS DEFINITION <<==========================================================
+#=====================================================>> FUNCTIONS <<==============================================================
+
 #mapping input value in input range to an output value in an output range
 def map(value, inMin, inMax, outMin, outMax):
     if value < inMin:
@@ -51,7 +49,6 @@ def map(value, inMin, inMax, outMin, outMax):
         value = inMax
     inRange = max(inMax - inMin,1)
     outRange = outMax - outMin
-
     valueScaled = float(value - inMin) / float(inRange)
 
     return outMin + (valueScaled * outRange)
@@ -74,8 +71,11 @@ def choose(input_list,poss):
         elif random.randrange(1,poss+1) != 1:
             return i
 
+#returns length of a int in pixels on screen with font size 30
 def getLength(num):
     return len(str(num))*16
+
+#===================================================>> PLAYER MANAGER <<===========================================================
 
 #player object (one instance)
 class Player(object):
@@ -115,6 +115,8 @@ class Player(object):
         self.x += x
         self.y += y
 
+#====================================================>> BUBBLE MANAGER <<==========================================================
+
 #bubble sprite, managed by a SpriteManager instance
 class Bubble(object):
     def __init__(self,start_x,start_y,vel,image,roaming_y):
@@ -139,18 +141,18 @@ class Bubble(object):
 
     def draw(self,win):
         win.blit(self.img,(self.x,self.y))
-        if show_boxes:
-            pygame.draw.rect(win,(255,0,0),self.rect,1)
+        # if show_boxes:
+        #     pygame.draw.rect(win,(255,0,0),self.rect,1)
 
     def move(self):
-        
-        self.y += random.randint(1,self.roam_y) * random.randrange(-1,2,2)
-            
+        self.y += random.randint(1,self.roam_y) * random.randrange(-1,2,2)   
         self.x += self.vel
         self.actualizeHitboxes()
     
     def actualizeHitboxes(self):
         self.rect = pygame.Rect(self.x+self.bias,self.y+self.bias,self.w,self.h)
+
+#===================================================>> SPRITE MANAGER <<===========================================================
 
 #sprite manager, handles Bubbles and Obstacles (with different params)
 class SpriteManager(object):
@@ -189,6 +191,8 @@ class SpriteManager(object):
     def drawSprites(self,win):
         for sprite in self.sprite_list:
             sprite.draw(win)
+
+#====================================================>> GUI  MANAGER <<============================================================
 
 #draws the HUD
 class GUIManager(object):
@@ -341,6 +345,8 @@ class GUIManager(object):
         self.outMgr.removeHighscore("You")
         del self
 
+#===================================================>> OBSTACLE MANAGER <<=========================================================
+
 #obstacle sprite, managed by a SpriteManager, similar to Bubble-object
 class Obstacle(object):
 
@@ -374,6 +380,8 @@ class Obstacle(object):
 
         if show_boxes:
             pygame.draw.rect(win,(255,0,0),self.rect,1)
+
+#====================================================>> GAME MANAGER <<============================================================
 
 #GameManager, handles complete game management
 class GameManager(object):
@@ -445,21 +453,19 @@ class GameManager(object):
         self.bub_mgr.createSprite(self.score,min_score,max_score)
         self.obst_mgr.createSprite(self.score,min_score,max_score)
 
+#===================================================>> OUTPUT MANAGER <<===========================================================
+
 #OutputManager
 class OutputManager(object):
-    def __init__(self,highscore,config):
+    def __init__(self,highscore):
         self.hs_path = highscore
-        self.cfg_path = config
         self.list = []
         self.highscores = {}
         if not(os.path.isfile(highscore)):
             open(highscore,'w+').close()
-        if not(os.path.isfile(config)):
-            open(config,'w+').close()
     
     def readHighscores(self):
         self.highscores = {}
-        # read from file
         file = open(self.hs_path,"rb")
 
         try:
@@ -497,8 +503,8 @@ class OutputManager(object):
             return
 
 #===================================================>> INITIALIZATION <<===========================================================
-#Output Manager
-outMgr = OutputManager("high.score","config.txt")
+#creating Output Manager
+outMgr = OutputManager("high.score")
 
 #creating player
 sub = Player(WIDTH/2,HEIGHT/2,7,sub_img)
@@ -613,8 +619,8 @@ if name:
         score_width = len_score*16
         win.blit(SC_FONT.render(str(score),True,color),(WIDTH-score_width-10,i*30+40))
 
-
 pygame.display.update()
+
 run = False if abort else True
 while run:
     for event in pygame.event.get():
