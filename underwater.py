@@ -189,7 +189,7 @@ class SpriteManager(object):
 
 #draws the HUD
 class GUIManager(object):
-    def __init__(self,win,game,GUI_rect_coords,vel_coords,gauge_configs):
+    def __init__(self,win,game,GUI_rect_coords,vel_coords,gauge_configs,outMgr):
         """
         Attention: all coordinates will be relative to GUI_rect_coords!
         Gauge configs: (size_of_average_list,cooldown)
@@ -210,17 +210,21 @@ class GUIManager(object):
         self.slider_old = 0
         self.average_old = 0
         self.reset_texts = [FONT.render("YOU REACHED",True,(255,0,0)),FONT.render("THE NEXT",True,(255,0,0)),FONT.render("LEVEL!",True,(255,0,0))]
+        self.outMgr = outMgr
+        self.outMgr.readHighscores()
+        self.sc_list = self.outMgr.sortHighscoresbyValue()
     
     def resetAverage(self):
         self.pps = [0] *self.size
 
-    def draw_GUI(self,score,TIME_LIMIT,isReset):
+    def draw_GUI(self,score,TIME_LIMIT,isReset,real_score):
         time = pygame.time.get_ticks() /1000
         self.draw_board()
         self.draw_oxygen_slider(score)
         self.draw_board_cover()
         self.draw_gauge(score,score/time)
-        self.draw_monitor(score,time,TIME_LIMIT,isReset)
+        self.draw_monitor1(real_score)
+        self.draw_monitor2(score,time,TIME_LIMIT,isReset)
 
     def draw_board(self):
         self.win.blit(steel[0],(self.x1,self.y1))
@@ -270,9 +274,56 @@ class GUIManager(object):
         x = math.cos(radian) * self.rad
         pygame.draw.line(win,(50,50,50),(self.velx,self.vely),(self.velx-x,self.vely-y),4)
     
-    def draw_monitor(self,score,time,TIME_LIMIT,isReset):
-        #win.blit(monitor,(self.x1+700,self.y1))
+    def draw_monitor1(self,score):
+        win.blit(SC_FONT.render("Scoreboard",True,(0,200,0)),(self.x1+420,self.y1+20))
+        self.outMgr.forceaddHighscore("You",score)
+        self.sc_list = self.outMgr.sortHighscoresbyValue()
+        print(self.sc_list)
+        if len(self.sc_list) > 1:
+            position = self.sc_list.index(("You",self.outMgr.highscores["You"]))
+            #print("Your position is {} in the list with the full length of {}".format(position,len(self.sc_list)))
+            
+            if len(self.sc_list)-1 == position:
+                spec_position = 2
+            elif position == 0:
+                spec_position = 0
+            else:
+                spec_position = 1
 
+            if spec_position == 1: #if you are not the last and not the first (STANDARD)
+                #print("Your are somewhere in the middle!")
+                self.createScoreboardStrings(position-1,position,position+1)
+            
+            elif spec_position == 0: #if you are the first
+                #print("Your at the first position!")
+                self.createScoreboardStrings(None,position,position+1)
+            
+            elif spec_position == 2: #if you are the last
+                #print("Your at the last position!")
+                self.createScoreboardStrings(position-1,position,None)
+
+        else:
+            name, score = self.sc_list[position]
+            string = name + (50 - len(str(score))*16)*" " +str(score) 
+            self.win.blit(SC_FONT.render(string,True,(0,200,0)),(self.x1+420,self.y1+60))
+
+    def createScoreboardStrings(self,back,you,front):
+        if back != None:
+            name, score = self.sc_list[back]                                          # the one behind you
+            string = name + (50 - len(str(score))*16)*" " +str(score) 
+            self.win.blit(SC_FONT.render(string,True,(0,200,0)),(self.x1+420,self.y1+60))
+
+        name, score = self.sc_list[you]                                            # you
+        string = name + (50 - len(str(score))*16)*" " +str(score) 
+        self.win.blit(SC_FONT.render(string,True,(0,0,200)),(self.x1+420,self.y1+90))
+
+        if front != None:
+            name, score = self.sc_list[front]                                          # the one in front of you
+            string = name + (50 - len(str(score))*16)*" " +str(score) 
+            self.win.blit(SC_FONT.render(string,True,(0,200,0)),(self.x1+420,self.y1+120))
+
+
+    def draw_monitor2(self,score,time,TIME_LIMIT,isReset):
         if isReset:
             win.blit(self.reset_texts[0],(self.x1+720,self.y1+60))
             win.blit(self.reset_texts[1],(self.x1+720,self.y1+100))
@@ -285,6 +336,10 @@ class GUIManager(object):
             win.blit(time_text,(self.x1+720,self.y1+20))
             win.blit(score_text,(self.x1+720,self.y1+60))
             win.blit(average_text,(self.x1+720,self.y1+100))
+    
+    def finalize(self):
+        self.outMgr.removeHighscore("You")
+        del self
 
 #obstacle sprite, managed by a SpriteManager, similar to Bubble-object
 class Obstacle(object):
@@ -322,7 +377,7 @@ class Obstacle(object):
 
 #GameManager, handles complete game management
 class GameManager(object):
-    def __init__(self,win,time_limit,max_score,bub_mgr,obst_mgr,OutputManager):
+    def __init__(self,win,time_limit,max_score,bub_mgr,obst_mgr):
         self.win = win
         # self.ANIMATION_TIME = 0
         self.TIME_LIMIT = time_limit
@@ -333,14 +388,13 @@ class GameManager(object):
         self.score = 0
         self.bub_mgr = bub_mgr
         self.obst_mgr = obst_mgr
-        self.outMgr = OutputManager
 
     def redrawGameWindow(self,isReset):
         #background
         win.blit(bg,(0,0))
 
         #GUI
-        gui.draw_GUI(self.score,self.TIME_LIMIT,isReset)
+        gui.draw_GUI(self.score,self.TIME_LIMIT,isReset,self.score+self.MAX_SCORE*self.ITERATIONS)
 
         #draw sub
         sub.draw(self.win)
@@ -434,6 +488,10 @@ class OutputManager(object):
                 self.highscores[name] = score
         except:
             self.highscores[name] = score
+    
+    def forceaddHighscore(self,name, score):
+        self.highscores[name] = score
+
     def saveHighscores(self):
         #writing new list to file
         file = open(self.hs_path,"wb")
@@ -443,6 +501,12 @@ class OutputManager(object):
     def sortHighscoresbyValue(self):
         self.list = sorted(self.highscores.items(), key=operator.itemgetter(1), reverse=True)
         return self.list
+    
+    def removeHighscore(self,name):
+        try:
+            self.highscores.pop(name)
+        except KeyError:
+            return
 
 #===================================================>> INITIALIZATION <<===========================================================
 #Output Manager
@@ -464,10 +528,10 @@ b_mgr = SpriteManager(Bubble,bubble_chance,WIDTH-10,(0,HEIGHT-30),bubble_vel,bub
 o_mgr = SpriteManager(Obstacle,obstacle_chance,WIDTH-10,(0,HEIGHT-30),obstacle_vel,obstacles_list,0,sub,obst_scores)
 
 #creating GameManager
-gameMgr = GameManager(win,30,10000,b_mgr,o_mgr,outMgr) 
+gameMgr = GameManager(win,30,10000,b_mgr,o_mgr) 
 
 #creating instances of the GUI-manager
-gui = GUIManager(win,gameMgr,(0,HEIGHT,WIDTH,HEIGHT+GUI_HEIGHT),(110,100,60),(10,0.5))
+gui = GUIManager(win,gameMgr,(0,HEIGHT,WIDTH,HEIGHT+GUI_HEIGHT),(110,100,60),(10,0.5),outMgr)
 #=====================================================>> MAIN LOOP <<==============================================================
 
 run = True
@@ -510,6 +574,7 @@ while run:
     gameMgr.redrawGameWindow(False)
 
 #======================================================>> END GAME <<==============================================================
+gui.finalize()
 score = gameMgr.score + gameMgr.MAX_SCORE * gameMgr.ITERATIONS
 WIDTH,HEIGHT = (400,500)
 win = pygame.display.set_mode((WIDTH,HEIGHT))
