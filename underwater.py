@@ -19,7 +19,7 @@ obstacles_list = [pygame.image.load("obstacle1.png"),pygame.image.load("obstacle
 liquid = pygame.image.load("liquid.png")
 
 
-bub_scores = [5,20,1000] #changed for testing purposes, old = 125
+bub_scores = [5,20,125] #changed for testing purposes, old = 125
 obst_scores = [-500,-250]
 
 #pygame init
@@ -49,7 +49,7 @@ def map(value, inMin, inMax, outMin, outMax):
         value = inMin
     elif value > inMax:
         value = inMax
-    inRange = inMax - inMin
+    inRange = max(inMax - inMin,1)
     outRange = outMax - outMin
 
     valueScaled = float(value - inMin) / float(inRange)
@@ -73,6 +73,9 @@ def choose(input_list,poss):
             return i
         elif random.randrange(1,poss+1) != 1:
             return i
+
+def getLength(num):
+    return len(str(num))*16
 
 #player object (one instance)
 class Player(object):
@@ -163,10 +166,10 @@ class SpriteManager(object):
             self.player = player
             self.scores = scores
     
-    def createSprite(self,score,MAX_SCORE):
-        if random.randrange(1,int(self.chance(score,MAX_SCORE))) == 1:
+    def createSprite(self,score,SCORE_MINLIMIT,SCORE_MAXLIMIT):
+        if random.randrange(1,int(self.chance(score,SCORE_MINLIMIT,SCORE_MAXLIMIT))) == 1:
             new_y = random.randint(self.y_min*10,self.y_max*10)/10
-            new_vel = self.vel(score,MAX_SCORE)
+            new_vel = self.vel(score,SCORE_MINLIMIT,SCORE_MAXLIMIT)
             new_img = choose(self.image_list,4)
 
             new_sprite = self.sprite(self.start_x,new_y,new_vel,new_img,self.roam_max,)
@@ -213,6 +216,8 @@ class GUIManager(object):
         self.outMgr = outMgr
         self.outMgr.readHighscores()
         self.sc_list = self.outMgr.sortHighscoresbyValue()
+        self.livesc_startx = self.x1 + 380
+        self.livesc_endx = self.x1 + 600
     
     def resetAverage(self):
         self.pps = [0] *self.size
@@ -220,17 +225,20 @@ class GUIManager(object):
     def draw_GUI(self,score,TIME_LIMIT,isReset,real_score):
         time = pygame.time.get_ticks() /1000
         self.draw_board()
-        self.draw_oxygen_slider(score)
+        self.draw_oxygen_slider(real_score)
         self.draw_board_cover()
         self.draw_gauge(score,score/time)
-        self.draw_monitor1(real_score)
+        self.draw_monitor1(score)
         self.draw_monitor2(score,time,TIME_LIMIT,isReset)
 
     def draw_board(self):
         self.win.blit(steel[0],(self.x1,self.y1))
 
     def draw_oxygen_slider(self,score):
-        y = map(score,0,self.game.MAX_SCORE,160,-10) + self.y1 + math.sin(self.slider_old*1/10)*5
+        score_max = self.game.MAX_SCORE*self.game.ITERATIONS
+        score_min = self.game.MAX_SCORE*(self.game.ITERATIONS-1)
+        y = map(score,score_min,score_max,160,-10) + self.y1 + math.sin(self.slider_old*1/10)*5
+        # print(y)
         x = self.x1 + 75
         self.slider_old += 1
         sx1 = self.slider_old%300 + x
@@ -298,25 +306,22 @@ class GUIManager(object):
                 self.createScoreboardStrings(position-1,position,None)
 
         else:
-            name, score = self.sc_list[position]
-            string = name + (50 - len(str(score))*16)*" " +str(score) 
-            self.win.blit(SC_FONT.render(string,True,(0,200,0)),(self.x1+420,self.y1+60))
+            self.blitScoreandName(position,90)
 
     def createScoreboardStrings(self,back,you,front):
-        if back != None:
-            name, score = self.sc_list[back]                                          # the one behind you
-            string = name + (50 - len(str(score))*16)*" " +str(score) 
-            self.win.blit(SC_FONT.render(string,True,(0,200,0)),(self.x1+420,self.y1+60))
 
-        name, score = self.sc_list[you]                                            # you
-        string = name + (50 - len(str(score))*16)*" " +str(score) 
-        self.win.blit(SC_FONT.render(string,True,(0,0,200)),(self.x1+420,self.y1+90))
+        if back != None:
+            self.blitScoreandName(back,60)
+        
+        self.blitScoreandName(you,90)
 
         if front != None:
-            name, score = self.sc_list[front]                                          # the one in front of you
-            string = name + (50 - len(str(score))*16)*" " +str(score) 
-            self.win.blit(SC_FONT.render(string,True,(0,200,0)),(self.x1+420,self.y1+120))
+            self.blitScoreandName(front,120)
 
+    def blitScoreandName(self,pos,y):
+        name, score = self.sc_list[pos]
+        self.win.blit(SC_FONT.render(name,True,(0,200,0)),(self.livesc_startx,self.y1+y))
+        self.win.blit(SC_FONT.render(str(score),True,(0,200,0)),(self.livesc_endx-getLength(score),self.y1+y))
 
     def draw_monitor2(self,score,time,TIME_LIMIT,isReset):
         if isReset:
@@ -325,7 +330,7 @@ class GUIManager(object):
             win.blit(self.reset_texts[2],(self.x1+720,self.y1+140))
         else:
             time_text = FONT.render("Time left: {} sec".format(round(TIME_LIMIT-time)), True, (255, 0, 0))
-            score_text = FONT.render("Score: {} pts".format(round(score+self.game.MAX_SCORE*self.game.ITERATIONS)),True,(255,0,0))
+            score_text = FONT.render("Score: {} pts".format(score),True,(255,0,0))
             average_text = FONT.render("Average: {} pts/sec".format(round(self.average_old)),True,(255,0,0))
             
             win.blit(time_text,(self.x1+720,self.y1+20))
@@ -379,7 +384,7 @@ class GameManager(object):
         self.ADD_ORIGIN = time_limit
         self.TIME_ADD = time_limit
         self.MAX_SCORE = max_score
-        self.ITERATIONS = 0
+        self.ITERATIONS = 1
         self.score = 0
         self.bub_mgr = bub_mgr
         self.obst_mgr = obst_mgr
@@ -389,8 +394,10 @@ class GameManager(object):
         win.blit(bg,(0,0))
 
         #GUI
-        gui.draw_GUI(self.score,self.TIME_LIMIT,isReset,self.score+self.MAX_SCORE*self.ITERATIONS)
-
+        if isReset:
+            gui.draw_GUI(self.score,self.TIME_LIMIT,isReset,self.virtual_score)
+        else:
+            gui.draw_GUI(self.score,self.TIME_LIMIT,isReset,self.score)
         #draw sub
         sub.draw(self.win)
 
@@ -403,35 +410,19 @@ class GameManager(object):
     
     #animation for resetting score when levelling up
     def animation(self):
-        score_overflow = self.score % self.MAX_SCORE
 
         b = 100
         while b > 0:
             clock.tick(60)
-            self.score = int(b/100 * self.MAX_SCORE)
+            self.virtual_score = int(b/100 * self.MAX_SCORE)
             self.redrawGameWindow(True)
             b -= 1
-            
-        self.score = score_overflow
+
         gui.resetAverage()
         self.ITERATIONS += 1
-        self.TIME_ADD = map(self.ITERATIONS,1,10,self.ADD_ORIGIN,15)
+        self.TIME_ADD = map(self.ITERATIONS,2,11,self.ADD_ORIGIN,self.ADD_ORIGIN/2)
         self.TIME_LIMIT = self.TIME_ADD + pygame.time.get_ticks()/1000
-        # debug = """ DEBUG: next level.
-        
-        # Iterations: {} 
-        # total score: {}pts 
-        # score overflow {}pts
 
-        # TIME
-        # before:              {}ms 
-        # after:               {}ms 
-        # passed in animation: {}ms 
-        # new time limit:      {}ms
-        # time till deadline:  {}s
-        # """
-        # print(debug.format(self.ITERATIONS,self.ITERATIONS*self.MAX_SCORE,score_overflow,time_old,time,time_passed,self.TIME_LIMIT,self.TIME_LIMIT-time/1000))
-    
     #triggered when time > TIME_LIMIT
     def endGame(self):
         self.TRUE_SCORE = self.score
@@ -449,8 +440,10 @@ class GameManager(object):
     
     #create new Sprites (Bubbles&Obstacles)
     def createSprites(self):
-        self.bub_mgr.createSprite(self.score,self.MAX_SCORE)
-        self.obst_mgr.createSprite(self.score,self.MAX_SCORE)
+        min_score = self.MAX_SCORE*(self.ITERATIONS-1)
+        max_score = self.MAX_SCORE*self.ITERATIONS
+        self.bub_mgr.createSprite(self.score,min_score,max_score)
+        self.obst_mgr.createSprite(self.score,min_score,max_score)
 
 #OutputManager
 class OutputManager(object):
@@ -511,12 +504,11 @@ outMgr = OutputManager("high.score","config.txt")
 sub = Player(WIDTH/2,HEIGHT/2,7,sub_img)
 
 #lambda expressions for recalculating the velocity for a new Bubble or Obstacle respectively
-bubble_vel = lambda sc,MAX_SCORE: random.randint(5,20)*-1
-obstacle_vel = lambda sc,MAX_SCORE: map(sc,0,MAX_SCORE,15,30)*-1
-
+bubble_vel = lambda sc,SCORE_MINLIMIT,SCORE_MAXLIMIT: random.randint(5,20)*-1
+obstacle_vel = lambda sc,SCORE_MINLIMIT,SCORE_MAXLIMIT: map(sc,SCORE_MINLIMIT,SCORE_MAXLIMIT,15,30)*-1
 #lambda expressions for recalculating the chance for an new Bubble or Obstacle to spawn respectively
-bubble_chance = lambda sc,MAX_SCORE: random.randint(3,5)
-obstacle_chance = lambda sc,MAX_SCORE: map(sc,0,MAX_SCORE,600,40) 
+bubble_chance = lambda sc,SCORE_MINLIMIT,SCORE_MAXLIMIT: random.randint(3,5)
+obstacle_chance = lambda sc,SCORE_MINLIMIT,SCORE_MAXLIMIT: map(sc,SCORE_MINLIMIT,SCORE_MAXLIMIT,600,40) 
 
 #creating instances of SpriteManager-class for handling Bubbles and Obstacles 
 b_mgr = SpriteManager(Bubble,bubble_chance,WIDTH-10,(0,HEIGHT-30),bubble_vel,bub_list,5,sub,bub_scores)
@@ -550,7 +542,7 @@ while run:
         show_boxes = False
 
     #checking whether next level or not
-    if gameMgr.score > gameMgr.MAX_SCORE:
+    if gameMgr.score > gameMgr.MAX_SCORE*gameMgr.ITERATIONS:
         gameMgr.animation()
     
     #check whether time is left
@@ -570,7 +562,7 @@ while run:
 
 #======================================================>> END GAME <<==============================================================
 gui.finalize()
-score = gameMgr.score + gameMgr.MAX_SCORE * gameMgr.ITERATIONS
+score = gameMgr.score# + gameMgr.MAX_SCORE * gameMgr.ITERATIONS
 WIDTH,HEIGHT = (400,500)
 win = pygame.display.set_mode((WIDTH,HEIGHT))
 pygame.display.set_caption("Scoreboard")
