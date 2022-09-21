@@ -310,7 +310,7 @@ class GUIManager(object):
                 self.createScoreboardStrings(position-1,position,None)
 
         else:
-            self.blitScoreandName(position,90)
+            self.blitScoreandName(0,90)
 
     def createScoreboardStrings(self,back,you,front):
 
