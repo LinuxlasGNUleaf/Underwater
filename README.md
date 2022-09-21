@@ -1,4 +1,4 @@
 # Underwater
-My current project: A pygame where you control a sub and collect bubbles
+A pygame where you control a sub and collect bubbles
 
-(discontinued)
+This project is finished and archived.
